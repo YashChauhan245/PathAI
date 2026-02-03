@@ -34,7 +34,7 @@ export const testimonial = [
   },
   {
     quote:
-      "The roadmap clarity was amazing. I finally knew what to learn and what to skip for my target role.",
+      "As someone switching careers, the industry insights gave me clarity, and the mock interviews helped me overcome nervousness. This app literally guided me step-by-step from resume to interview.",
     author: "Emily Johnson",
     image: "https://randomuser.me/api/portraits/women/65.jpg",
     role: "Data Analyst",
@@ -42,7 +42,7 @@ export const testimonial = [
   },
   {
     quote:
-      "I cracked my first tech interview after following the personalized prep plan. Worth every minute!",
+      "I used the resume builder and cover letter feature to apply for internships, and the mock interviews were insanely helpful. The feedback felt real and practical, just like an actual interview.",
     author: "Rohit Sharma",
     image: "https://randomuser.me/api/portraits/men/66.jpg",
     role: "Frontend Developer",
