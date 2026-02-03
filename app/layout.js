@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
     >
       <html lang="en" suppressHydrationWarning>
         <head>
-          <link rel="icon" href="/logo10.png" sizes="any" />
+          <link rel="icon" href="/logo0.png" sizes="any" />
         </head>
         <body className={`${inter.className}`}>
           <ThemeProvider
