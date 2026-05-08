@@ -11,6 +11,17 @@ const signInSchema = z.object({
   password: z.string().min(6),
 });
 
+const env = {
+  googleClientId:
+    process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || "",
+  googleClientSecret:
+    process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || "",
+  githubClientId:
+    process.env.GITHUB_ID || process.env.GITHUB_CLIENT_ID || process.env.AUTH_GITHUB_ID || "",
+  githubClientSecret:
+    process.env.GITHUB_SECRET || process.env.GITHUB_CLIENT_SECRET || process.env.AUTH_GITHUB_SECRET || "",
+};
+
 const providers = [
   Credentials({
     name: "credentials",
@@ -54,20 +65,23 @@ const providers = [
   }),
 ];
 
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+if (env.googleClientId && env.googleClientSecret) {
   providers.push(
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: env.googleClientId,
+      clientSecret: env.googleClientSecret,
     })
   );
 }
 
-if (process.env.GITHUB_ID && process.env.GITHUB_SECRET) {
+if (env.githubClientId && env.githubClientSecret) {
   providers.push(
     GitHub({
-      clientId: process.env.GITHUB_ID,
-      clientSecret: process.env.GITHUB_SECRET,
+      clientId: env.githubClientId,
+      clientSecret: env.githubClientSecret,
+      authorization: {
+        params: { scope: "read:user user:email" },
+      },
     })
   );
 }
@@ -104,16 +118,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async jwt({ token, user }) {
-      if (user?.id) {
+      if (user?.id && !token?.email) {
         token.id = user.id;
       }
 
-      if (!token.id && token.email) {
+      if (token.email) {
         const dbUser = await db.user.findUnique({
           where: { email: token.email },
           select: { id: true },
         });
-        token.id = dbUser?.id;
+        if (dbUser?.id) {
+          token.id = dbUser.id;
+        }
       }
 
       return token;
