@@ -42,3 +42,7 @@ next-env.d.ts
 
 # private prep notes
 /private/
+
+#interview prep
+interview.md
+questions.md    
