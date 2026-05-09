@@ -5,11 +5,8 @@ import dynamic from "next/dynamic";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AlertTriangle,
   Download,
-  Edit,
   Loader2,
-  Monitor,
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +20,7 @@ import useFetch from "@/hooks/use-fetch";
 import { useSession } from "next-auth/react";
 import { entriesToMarkdown } from "@/lib/markdown";
 import { resumeSchema } from "@/lib/form-schemas";
+import { optimizeForATS } from "@/lib/ats-scoring";
 import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), {
@@ -36,10 +34,11 @@ const MDEditorMarkdown = dynamic(
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
-  const [previewContent, setPreviewContent] = useState(initialContent);
+  const [previewContent, setPreviewContent] = useState(
+    optimizeForATS(initialContent || "")
+  );
   const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
-  const [resumeMode, setResumeMode] = useState("preview");
 
   const {
     control,
@@ -81,7 +80,7 @@ export default function ResumeBuilder({ initialContent }) {
   useEffect(() => {
     if (activeTab === "edit") {
       const newContent = getCombinedContent();
-      setPreviewContent(newContent ? newContent : initialContent);
+      setPreviewContent(newContent || optimizeForATS(initialContent || ""));
     }
   }, [formValues, activeTab]);
 
@@ -98,21 +97,21 @@ export default function ResumeBuilder({ initialContent }) {
   const getContactMarkdown = () => {
     const { contactInfo } = formValues;
     const parts = [];
-    if (contactInfo.email) parts.push(`📧 ${contactInfo.email}`);
-    if (contactInfo.mobile) parts.push(`📱 ${contactInfo.mobile}`);
-    if (contactInfo.linkedin)
-      parts.push(`💼 [LinkedIn](${contactInfo.linkedin})`);
-    if (contactInfo.twitter) parts.push(`🐦 [Twitter](${contactInfo.twitter})`);
+    if (contactInfo.email) parts.push(`Email: ${contactInfo.email}`);
+    if (contactInfo.mobile) parts.push(`Phone: ${contactInfo.mobile}`);
+    if (contactInfo.linkedin) parts.push(`LinkedIn: ${contactInfo.linkedin}`);
+    if (contactInfo.twitter) parts.push(`Website: ${contactInfo.twitter}`);
 
     return parts.length > 0
-      ? `## <div align="center">${session?.user?.name || "Your Name"}</div>
-        \n\n<div align="center">\n\n${parts.join(" | ")}\n\n</div>`
+      ? [`# ${session?.user?.name || "Your Name"}`, parts.join(" | ")].join(
+          "\n\n"
+        )
       : "";
   };
 
   const getCombinedContent = () => {
     const { summary, skills, experience, education, projects } = formValues;
-    return [
+    const content = [
       getContactMarkdown(),
       summary && `## Professional Summary\n\n${summary}`,
       skills && `## Skills\n\n${skills}`,
@@ -122,6 +121,8 @@ export default function ResumeBuilder({ initialContent }) {
     ]
       .filter(Boolean)
       .join("\n\n");
+
+    return optimizeForATS(content);
   };
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -148,13 +149,9 @@ export default function ResumeBuilder({ initialContent }) {
 
   const onSubmit = async (data) => {
     try {
-      const formattedContent = previewContent
-        .replace(/\n/g, "\n") // Normalize newlines
-        .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
-        .trim();
-
-      console.log(previewContent, formattedContent);
-      await saveResumeFn(previewContent);
+      const atsFriendlyContent = optimizeForATS(getCombinedContent() || previewContent);
+      setPreviewContent(atsFriendlyContent);
+      await saveResumeFn(atsFriendlyContent);
     } catch (error) {
       console.error("Save error:", error);
     }
@@ -166,7 +163,7 @@ export default function ResumeBuilder({ initialContent }) {
         <h1 className="font-bold gradient-title text-5xl md:text-6xl">
           Resume Builder
         </h1>
-        <div className="space-x-2">
+        <div className="space-x-2 flex flex-wrap">
           <Button
             variant="destructive"
             onClick={handleSubmit(onSubmit)}
@@ -199,6 +196,10 @@ export default function ResumeBuilder({ initialContent }) {
           </Button>
         </div>
       </div>
+
+      <p className="text-sm text-slate-400">
+        The resume is automatically formatted to stay clean, single-column, and ATS-friendly.
+      </p>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -376,44 +377,13 @@ export default function ResumeBuilder({ initialContent }) {
         </TabsContent>
 
         <TabsContent value="preview">
-          {activeTab === "preview" && (
-            <Button
-              variant="link"
-              type="button"
-              className="mb-2"
-              onClick={() =>
-                setResumeMode(resumeMode === "preview" ? "edit" : "preview")
-              }
-            >
-              {resumeMode === "preview" ? (
-                <>
-                  <Edit className="h-4 w-4" />
-                  Edit Resume
-                </>
-              ) : (
-                <>
-                  <Monitor className="h-4 w-4" />
-                  Show Preview
-                </>
-              )}
-            </Button>
-          )}
-
-          {activeTab === "preview" && resumeMode !== "preview" && (
-            <div className="flex p-3 gap-2 items-center border-2 border-yellow-600 text-yellow-600 rounded mb-2">
-              <AlertTriangle className="h-5 w-5" />
-              <span className="text-sm">
-                You will lose editied markdown if you update the form data.
-              </span>
-            </div>
-          )}
           <div className="border rounded-lg">
             {mounted ? (
               <MDEditor
                 value={previewContent}
                 onChange={setPreviewContent}
                 height={800}
-                preview={resumeMode}
+                preview="preview"
               />
             ) : (
               <div className="h-[800px] w-full rounded-lg bg-white/5" />

@@ -8,6 +8,9 @@ const nextConfig = {
       },
     ],
   },
+  // Performance optimizations
+  reactStrictMode: true,
+  poweredByHeader: false, // Remove X-Powered-By header for security
 };
 
 export default nextConfig;

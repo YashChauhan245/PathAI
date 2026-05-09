@@ -3,7 +3,8 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
+import { optimizeForATS } from "@/lib/ats-scoring";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -20,16 +21,18 @@ export async function saveResume(content) {
   if (!user) throw new Error("User not found");
 
   try {
+    const atsFriendlyContent = optimizeForATS(content);
+
     const resume = await db.resume.upsert({
       where: {
         userId: user.id,
       },
       update: {
-        content,
+        content: atsFriendlyContent,
       },
       create: {
         userId: user.id,
-        content,
+        content: atsFriendlyContent,
       },
     });
 
@@ -46,13 +49,22 @@ export async function getResume() {
   const userEmail = session?.user?.email;
   if (!userEmail) throw new Error("Unauthorized");
 
-  return await db.resume.findFirst({
-    where: {
-      user: {
-        email: userEmail,
-      },
+  // Cache the database query for 1 hour
+  const getCachedResume = unstable_cache(
+    async (email) => {
+      return await db.resume.findFirst({
+        where: {
+          user: {
+            email: email,
+          },
+        },
+      });
     },
-  });
+    ["resume"], // cache key
+    { revalidate: 3600 } // 1 hour cache
+  );
+
+  return await getCachedResume(userEmail);
 }
 
 export async function improveWithAI({ current, type }) {
@@ -71,7 +83,7 @@ export async function improveWithAI({ current, type }) {
 
   const prompt = `
     As an expert resume writer, improve the following ${type} description for a ${user.industry} professional.
-    Make it more impactful, quantifiable, and aligned with industry standards.
+    Make it more impactful, quantifiable, ATS-friendly, and aligned with industry standards.
     Current content: "${current}"
 
     Requirements:
@@ -81,6 +93,8 @@ export async function improveWithAI({ current, type }) {
     4. Keep it concise but detailed
     5. Focus on achievements over responsibilities
     6. Use industry-specific keywords
+    7. Avoid emojis, tables, icons, and decorative formatting
+    8. Keep it suitable for plain-text ATS parsing
 
     Format the response as a single paragraph without any additional text or explanations.
   `;

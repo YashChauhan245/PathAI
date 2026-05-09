@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { unstable_cache } from "next/cache";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -40,26 +41,37 @@ export async function getIndustryInsights() {
   const userEmail = session?.user?.email;
   if (!userEmail) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { email: userEmail },
-    include: {
-      industryInsight: true,
+  // Cache the user + industry insights query for 1 hour
+  const getCachedInsights = unstable_cache(
+    async (email) => {
+      const user = await db.user.findUnique({
+        where: { email: email },
+        select: {
+          id: true,
+          industry: true,
+          industryInsight: true,
+        },
+      });
+
+      if (!user) throw new Error("User not found");
+
+      if (!user.industryInsight) {
+        const insights = await generateAIInsights(user.industry);
+
+        const industryInsight = await db.industryInsight.create({
+          data: {
+            industry: user.industry,
+            ...insights,
+            nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          },
+        });
+        return industryInsight;
+      }
+      return user.industryInsight;
     },
-  });
+    ["industryInsights"],
+    { revalidate: 3600 } // 1 hour cache
+  );
 
-  if (!user) throw new Error("User not found");
-
-  if (!user.industryInsight) {
-    const insights = await generateAIInsights(user.industry);
-
-    const industryInsight = await db.industryInsight.create({
-      data: {
-        industry: user.industry,
-        ...insights,
-        nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
-    return industryInsight;
-  }
-  return user.industryInsight;
+  return await getCachedInsights(userEmail);
 }

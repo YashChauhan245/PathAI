@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { generateAIInsights } from "./dashboard";
 
 const FALLBACK_INSIGHTS = {
@@ -146,27 +146,23 @@ export async function getUserOnboardingStatus() {
   const userEmail = session?.user?.email;
   if (!userEmail) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { email: userEmail },
-  });
+  // Cache the onboarding status check for 30 minutes
+  const getCachedStatus = unstable_cache(
+    async (email) => {
+      const userData = await db.user.findUnique({
+        where: { email: email },
+        select: { industry: true },
+      });
 
-  if (!user) throw new Error("User not found");
+      if (!userData) throw new Error("User not found");
 
-  try {
-    const userData = await db.user.findUnique({
-      where: {
-        email: userEmail,
-      },
-      select: {
-        industry: true,
-      },
-    });
+      return {
+        isOnboarded: !!userData?.industry,
+      };
+    },
+    ["onboardingStatus"],
+    { revalidate: 1800 } // 30 minute cache
+  );
 
-    return {
-      isOnboarded: !!userData?.industry,
-    };
-  } catch (error) {
-    console.error("Error checking onboarding status:", error);
-    throw new Error("Failed to check onboarding status");
-  }
+  return await getCachedStatus(userEmail);
 }
