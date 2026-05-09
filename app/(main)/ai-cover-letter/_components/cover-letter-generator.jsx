@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -19,7 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateCoverLetter } from "@/actions/cover-letter";
 import useFetch from "@/hooks/use-fetch";
 import { coverLetterSchema } from "@/lib/form-schemas";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CoverLetterGenerator() {
@@ -40,14 +39,13 @@ export default function CoverLetterGenerator() {
     data: generatedLetter,
   } = useFetch(generateCoverLetter);
 
-  // Update content when letter is generated
   useEffect(() => {
     if (generatedLetter) {
       toast.success("Cover letter generated successfully!");
       router.push(`/ai-cover-letter/${generatedLetter.id}`);
       reset();
     }
-  }, [generatedLetter]);
+  }, [generatedLetter, reset, router]);
 
   const onSubmit = async (data) => {
     try {
@@ -63,12 +61,11 @@ export default function CoverLetterGenerator() {
         <CardHeader>
           <CardTitle>Job Details</CardTitle>
           <CardDescription>
-            Provide information about the position you're applying for
+            Provide information about the position you&apos;re applying for
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Form fields remain the same */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="companyName">Company Name</Label>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,24 +77,7 @@ export default function ResumeBuilder({ initialContent }) {
   }, []);
 
   // Update preview content when form values change
-  useEffect(() => {
-    if (activeTab === "edit") {
-      const newContent = getCombinedContent();
-      setPreviewContent(newContent || optimizeForATS(initialContent || ""));
-    }
-  }, [formValues, activeTab]);
-
-  // Handle save result
-  useEffect(() => {
-    if (saveResult && !isSaving) {
-      toast.success("Resume saved successfully!");
-    }
-    if (saveError) {
-      toast.error(saveError.message || "Failed to save resume");
-    }
-  }, [saveResult, saveError, isSaving]);
-
-  const getContactMarkdown = () => {
+  const getContactMarkdown = useCallback(() => {
     const { contactInfo } = formValues;
     const parts = [];
     if (contactInfo.email) parts.push(`Email: ${contactInfo.email}`);
@@ -107,9 +90,9 @@ export default function ResumeBuilder({ initialContent }) {
           "\n\n"
         )
       : "";
-  };
+  }, [formValues, session?.user?.name]);
 
-  const getCombinedContent = () => {
+  const getCombinedContent = useCallback(() => {
     const { summary, skills, experience, education, projects } = formValues;
     const content = [
       getContactMarkdown(),
@@ -123,7 +106,24 @@ export default function ResumeBuilder({ initialContent }) {
       .join("\n\n");
 
     return optimizeForATS(content);
-  };
+  }, [formValues, getContactMarkdown]);
+
+  useEffect(() => {
+    if (activeTab === "edit") {
+      const newContent = getCombinedContent();
+      setPreviewContent(newContent || optimizeForATS(initialContent || ""));
+    }
+  }, [activeTab, getCombinedContent, initialContent]);
+
+  // Handle save result
+  useEffect(() => {
+    if (saveResult && !isSaving) {
+      toast.success("Resume saved successfully!");
+    }
+    if (saveError) {
+      toast.error(saveError.message || "Failed to save resume");
+    }
+  }, [saveResult, saveError, isSaving]);
 
   const [isGenerating, setIsGenerating] = useState(false);
 

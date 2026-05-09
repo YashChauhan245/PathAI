@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+
 import { Button } from "./ui/button";
 import {
   PenBox,
@@ -10,6 +11,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,11 +19,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import { auth, signOut } from "@/auth";
 
-export default async function Header() {
-  const session = await auth();
+export default function Header() {
+  const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/" });
+  };
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-[#1a1a1a] bg-black/95 backdrop-blur">
@@ -151,12 +156,14 @@ export default async function Header() {
 
           {isLoggedIn && (
             <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleSignOut();
               }}
             >
-              <Button type="submit" variant="outline">Sign Out</Button>
+              <Button type="submit" variant="outline">
+                Sign Out
+              </Button>
             </form>
           )}
         </div>
