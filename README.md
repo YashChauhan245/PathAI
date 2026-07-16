@@ -1,182 +1,157 @@
-# Path AI
+# 🚀 Path AI — AI-First Career Guidance Workspace
 
-Path AI is an AI-first career guidance workspace built with Next.js (App Router). It combines resume building, AI-generated cover letters, mock interview practice, interactive chat, and industry analytics to help professionals prepare for job search and career progression.
+🚀 **Live Application:** [https://mypath-ai.vercel.app](https://mypath-ai.vercel.app)
 
-**Status:** production-ready README for interview / portfolio review.
-
-**Key areas covered:** usage, tech stack, architecture, data model, security, deployment, and developer setup.
+Path AI is a comprehensive, production-ready, AI-driven career guidance workspace designed to accelerate professional job search and career progression. Built on Next.js 15 (App Router), it leverages Google Gemini to deliver tailored resume optimization, AI-generated cover letters, realistic mock interviews, interactive conversational assistant chat, and real-time industry/salary analytics.
 
 ---
 
-**Overview**
-
-- **What:** Full-stack Next.js app that provides growth tools: resume builder (ATS optimization), cover letter generation, interview quizzes, industry insights, and an assistant chat.
-- **Audience:** Job seekers, career coaches, and product teams that want structured career workflows.
-
-**Live demo / owner**: Made by Yash Chauhan
-
----
-
-**Features (by module)**
-
-- **Landing:** Marketing pages, features, FAQ, testimonials, AI plan CTA.
-- **Auth / Onboarding:** Email/password + OAuth (Google/GitHub) with onboarding flow to capture industry and skills.
-- **Dashboard:** Industry insights, salary charts, and personalized recommendations.
-- **Resume:** Resume editor, ATS optimization, save/load resume to DB.
-- **Cover Letter:** AI-generated, editable cover letters saved to user account.
-- **Interview Prep:** AI-generated quizzes, mock interview flow, assessment storage and improvement tips.
-- **Chat:** Conversational AI assistant for roadmaps, resume feedback, and task suggestions.
-- **Settings / Profile:** Manage preferences, workspace, and security options.
+## 📖 Table of Contents
+- [📌 Overview](#-overview)
+- [✨ Key Features](#-key-features)
+- [🛠️ Tech Stack](#-tech-stack)
+- [📂 Architecture & Folder Structure](#-architecture--folder-structure)
+- [📊 Database Schema & Data Model](#-database-schema--data-model)
+- [⚙️ Environment Variables](#-environment-variables)
+- [🚀 Local Development Setup](#-local-development-setup)
+- [🌐 Production Deployment & OAuth Setup](#-production-deployment--oauth-setup)
+- [🛡️ Security & Best Practices](#-security--best-practices)
 
 ---
 
-**Tech Stack**
-
-- **Framework:** Next.js 15 (App Router)
-- **Language:** JavaScript / React 19
-- **Styling:** Tailwind CSS (custom design tokens)
-- **UI primitives:** Radix + shadcn-style components
-- **Database / ORM:** PostgreSQL + Prisma (see [prisma/schema.prisma](prisma/schema.prisma#L1))
-- **Auth:** next-auth (credentials + OAuth)
-- **AI:** Google Gemini via `@google/generative-ai`
-- **Background / Workers:** Inngest functions and webhooks
-- **Charts / UI helpers:** Recharts, Sonner, Lucide icons
+## 📌 Overview
+Path AI combines modern AI models with a sleek, interactive user experience to simplify and automate key parts of the job application pipeline. It solves standard job seeker problems (lack of tailored resumes, generic cover letters, and interview anxiety) by acting as an intelligent agent that keeps track of the user's industry, skills, and past performance.
 
 ---
 
-**Architecture & important files**
-
-- **App entry & routing:** `app/` (Next.js App Router) — layouts, auth and main product routes.
-- **Server actions & features:** `actions/` contains server-side action handlers (resume, cover-letter, interview, dashboard).
-- **DB client:** `lib/prisma.js` (Prisma client pooling and reuse).
-- **Auth handlers:** `auth.js` and `app/api/auth/[...nextauth]/route.js` (NextAuth setup).
-- **Background tasks:** `lib/inngest/*` and `app/api/inngest/route.js` for scheduled enrichment (industry insights).
-- **Prisma schema & migrations:** `prisma/schema.prisma` and `prisma/migrations/` (canonical data model for users, resumes, cover letters, assessments, industry insights).
-
-Refer to these files for the implementation details: [package.json](package.json#L1), [prisma/schema.prisma](prisma/schema.prisma#L1), [app/layout.js](app/layout.js#L1), [lib/prisma.js](lib/prisma.js#L1).
+## ✨ Key Features
+* **🎯 Interactive Onboarding:** Collects user profile details, industry focus, experience levels, and skills to personalize all AI actions.
+* **📊 Analytics Dashboard:** Displays live industry insights, salary trends (via Recharts), growth rates, and dynamic career recommendation cards.
+* **📝 ATS-Optimized Resume Builder:** Enables users to edit resumes, check real-time ATS optimization scores, and get actionable suggestions.
+* **✉️ AI Cover Letter Generator:** Instantly generates tailored, high-converting cover letters based on specific job descriptions and user profiles.
+* **🎙️ Mock Interview Prep:** Interactive quizzes and situational practice flows with immediate AI evaluations, feedback, and improvement metrics.
+* **💬 Career Assistant Chat:** A context-aware chatbot offering career advice, resume reviews, roadmap generation, and task suggestions.
 
 ---
 
-**Data model (summary)**
+## 🛠️ Tech Stack
 
-- `User` — core profile (email, name, image, skills, industry, passwordHash)
-- `Resume` — markdown content, ATS score, feedback
-- `CoverLetter` — generated content, job/company metadata, status
-- `Assessment` — saved quiz results, improvement tips
-- `IndustryInsight` — salary ranges, growthRate, topSkills, trends
-
-Full schema: [prisma/schema.prisma](prisma/schema.prisma#L1).
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Framework** | Next.js 15 (App Router) | Server-side rendering, API routes, and App router patterns. |
+| **Library** | React 19 / Javascript | Core UI component lifecycle and DOM manipulation. |
+| **Database** | PostgreSQL | Relational database storage (hosted on Neon). |
+| **ORM** | Prisma | Typesafe database schema modeling and queries. |
+| **Authentication** | Auth.js (NextAuth.js v5) | Credentials-based email/password & OAuth (Google/GitHub). |
+| **AI Integration** | Google Gemini API (`@google/generative-ai`) | Generates resume feedback, cover letters, mock interviews, and advice. |
+| **Workflow Engine** | Inngest | Manages background jobs and event-driven updates. |
+| **Styling** | Tailwind CSS & Tailwind Animate | Responsive grid system, premium styling, and animations. |
+| **UI Components** | Radix UI + Lucide Icons | Accessible headless primitives and modern vector iconography. |
 
 ---
 
-**Environment variables**
+## 📂 Architecture & Folder Structure
 
-Create a `.env` file at project root. Minimum required variables:
+* **`app/`** — Next.js App Router folders containing the pages, layouts, and route handlers.
+  * **`api/`** — Backend endpoints, including next-auth (`api/auth/[...nextauth]`) and background tasks (`api/inngest`).
+* **`actions/`** — Server Actions containing backend logic (Resume, Cover Letter, Quizzes) separating DB mutations/AI calls from client components.
+* **`components/`** — Reusable UI modules (buttons, models, dashboard widgets) styled with Tailwind CSS.
+* **`prisma/`** — The [schema.prisma](prisma/schema.prisma) configuration file, detailing tables, database relations, and migrations.
+* **`lib/`** — Shareable utility classes and helper configurations (e.g. database client pooler [prisma.js](lib/prisma.js) and [inngest/](lib/inngest) routines).
+* **`middleware.js`** — Intercepts and guards routes (`/dashboard`, `/resume`, `/interview`, etc.) ensuring only authenticated sessions pass.
+
+---
+
+## 📊 Database Schema & Data Model
+Path AI leverages a PostgreSQL relational database structured as follows:
+
+* **`User`** — Profile fields (`email`, `name`, `image`, `skills`, `industry`, `experience`).
+* **`Resume`** — Markdown content, calculated ATS optimization score, and AI feedback.
+* **`CoverLetter`** — Saved cover letter documents, target company information, and job description.
+* **`Assessment`** — Historic record of AI-graded mock interviews, quiz scores, and actionable feedback.
+* **`IndustryInsight`** — Cached salary averages, market growth indicators, high-demand skills, and trends.
+
+For details, view the complete schema file: [prisma/schema.prisma](prisma/schema.prisma).
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the root directory:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
-AUTH_SECRET="replace-with-a-strong-random-secret"
-GEMINI_API_KEY="your-gemini-api-key"
+# Database Connection (Postgres)
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
 
-# Optional (enable OAuth providers)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-GITHUB_ID=""
-GITHUB_SECRET=""
+# Auth.js / NextAuth Configuration
+AUTH_SECRET="your-32-byte-long-random-secret"
+NEXTAUTH_URL="http://localhost:3000"
+
+# AI Integration
+GEMINI_API_KEY="your-google-gemini-api-key"
+
+# Optional OAuth Client Credentials
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+GITHUB_ID="your-github-client-id"
+GITHUB_SECRET="your-github-client-secret"
 ```
 
-Notes:
+---
 
-- `DATABASE_URL` is required for Prisma and migrations.
-- `AUTH_SECRET` is used by NextAuth for signed cookies/JWT.
-- Gemini API key is required for AI-driven features (resume improvements, cover letters, quizzes, insights).
+## 🚀 Local Development Setup
+
+Follow these steps to run Path AI locally:
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YashChauhan245/Path_AI.git
+   cd Path_AI
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Database Migration:**
+   Ensure your local/development database is active and `DATABASE_URL` is set in `.env`, then run:
+   ```bash
+   npx prisma migrate dev
+   ```
+
+4. **Generate Prisma Client:**
+   ```bash
+   npx prisma generate
+   ```
+
+5. **Start the Development Server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-**Local development**
+## 🌐 Production Deployment & OAuth Setup
 
-1. Install dependencies:
+Path AI is optimized for deployment on **Vercel** with a hosted database (such as **Neon**).
 
-```bash
-npm install
-```
-
-2. Generate Prisma client (postinstall runs this automatically):
-
-```bash
-npx prisma generate
-```
-
-3. Run local migrations & dev DB (ensure `DATABASE_URL` points to your dev Postgres):
-
-```bash
-npx prisma migrate dev
-npx prisma studio
-```
-
-4. Start dev server:
-
-```bash
-npm run dev
-```
-
-App runs at `http://localhost:3000` by default.
+### Crucial Post-Deployment Steps:
+1. **Set Environment Variables:**
+   Ensure all production keys listed in [Environment Variables](#-environment-variables) are defined in your deployment settings. Set `AUTH_URL` to `https://<your-domain>/api/auth`.
+2. **Database Migration:**
+   Apply any pending database schema migrations in production by running:
+   ```bash
+   npx prisma migrate deploy
+   ```
+3. **Configure OAuth Redirect URIs:**
+   * **Google:** Register `https://<your-domain>/api/auth/callback/google` in the Authorized Redirect URIs on the [Google Cloud Console](https://console.cloud.google.com/).
+   * **GitHub:** Register `https://<your-domain>/api/auth/callback/github` as the Authorization Callback URL in your [GitHub Developer settings](https://github.com/settings/developers).
 
 ---
 
-**Production / Deployment notes**
-
-- Recommended platform: Vercel (Next.js first-class) + managed PostgreSQL (e.g., Neon, Supabase, Render managed DB).
-- Before deploy:
-  - Set all `ENV` variables in the platform settings.
-  - Run `npx prisma migrate deploy` to apply schema migrations.
-  - Ensure `AUTH_SECRET` is strong and unique.
-  - Add OAuth callback URLs for Google/GitHub if those providers are used.
-
----
-
-**Security & privacy notes**
-
-- Passwords are hashed with `bcryptjs` before saving.
-- Sensitive keys (Gemini API, DB URL, OAuth secrets) must never be committed to source.
-- Consider rotating `AUTH_SECRET` and API keys regularly in production.
-
----
-
-**Developer tips & known behaviors**
-
-- The project uses server actions (files in `actions/`) to keep AI calls and DB updates server-side.
-- `lib/prisma.js` exposes a singleton Prisma client for dev hot-reloads — keep this pattern to avoid connection storms.
-- AI prompts are strict about returning JSON in some places; malformed AI responses may throw JSON.parse errors — add defensive parsing when adapting.
-- Caching: several actions use `unstable_cache` and `revalidatePath` for performance and incremental updates.
-
----
-
-**Useful commands**
-
-- `npm run dev` — run dev server
-- `npm run build` — build for production
-- `npm run start` — start production server
-- `npx prisma migrate dev` — run migrations locally
-- `npx prisma migrate deploy` — apply migrations in production
-- `npx prisma studio` — open DB admin UI
-
----
-
-**Where to look for interview review**
-
-- UI & routes: [app/](app#L1)
-- Server actions: [actions/](actions#L1)
-- DB model: [prisma/schema.prisma](prisma/schema.prisma#L1)
-- Dev metadata & scripts: [package.json](package.json#L1)
-
----
-
-If you want, I can:
-
-- Run a static analysis to list potential runtime issues.
-- Add a short CONTRIBUTING.md and a PR template.
-- Prepare a one-page slide summarizing architecture for interviewers.
-
-Made a concise, interviewer-friendly README and updated [README.md](README.md#L1) in the repository.
-
+## 🛡️ Security & Best Practices
+* **Password Hashing:** User passwords are encrypted using `bcryptjs` before insertion into the database.
+* **Route Protection:** Handled via Next.js Edge Middleware ([middleware.js](middleware.js)) verifying JWT signatures.
+* **Environment Integrity:** Hardcoded API keys are forbidden. All credentials must be sourced strictly from environment variables.
