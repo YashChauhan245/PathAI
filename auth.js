@@ -5,6 +5,7 @@ import GitHub from "next-auth/providers/github";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/prisma";
+import { authConfig } from "./auth.config";
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -87,16 +88,11 @@ if (env.githubClientId && env.githubClientSecret) {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  ...authConfig,
   trustHost: true,
-  session: {
-    strategy: "jwt",
-  },
   providers,
-  pages: {
-    signIn: "/sign-in",
-  },
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       if (!user?.email) return false;
 

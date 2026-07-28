@@ -1,31 +1,7 @@
-import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-const protectedRoutes = [
-  "/dashboard",
-  "/resume",
-  "/interview",
-  "/ai-cover-letter",
-  "/chat",
-  "/onboarding",
-];
-
-function isProtectedPath(pathname) {
-  return protectedRoutes.some((prefix) => pathname.startsWith(prefix));
-}
-
-export default async function middleware(req) {
-  const pathname = req.nextUrl.pathname;
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET });
-
-  if (!token && isProtectedPath(pathname)) {
-    const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(signInUrl);
-  }
-
-  return NextResponse.next();
-}
+export default NextAuth(authConfig).auth;
 
 export const config = {
   matcher: [
