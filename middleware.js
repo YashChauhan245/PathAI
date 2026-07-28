@@ -16,7 +16,7 @@ function isProtectedPath(pathname) {
 
 export default async function middleware(req) {
   const pathname = req.nextUrl.pathname;
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET });
 
   if (!token && isProtectedPath(pathname)) {
     const signInUrl = new URL("/sign-in", req.url);

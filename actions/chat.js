@@ -7,7 +7,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // This is like connecting to an API service
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Select the AI model to use (gemini-2.5-flash is fast and accurate)
+// Select the AI model to use (gemini-1.5-flash is fast and accurate)
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 /**
